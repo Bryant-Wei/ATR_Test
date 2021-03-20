@@ -8,7 +8,15 @@
 
 #define MAX_STRING 1024					//每行最大字节数
 #define NUM_DATA 15						//每行最大数据值
+#define BUFF_NUM 100					//最大缓存值
 
+int count1, count2, count3=0;				//计算缓存长度
+char  imu_buff[BUFF_NUM][NUM_DATA][MAX_STRING];					//imu的缓存
+char  wifi_buff[BUFF_NUM][NUM_DATA][MAX_STRING];				//wifi的缓存
+char  gnss_buff[BUFF_NUM][NUM_DATA][MAX_STRING];				//gnss的缓存
+
+bool flag1, flag2, flag3= false;			//第一次读取的标志
+char Time_Ref[20];
 void imu(char buff[][MAX_STRING])
 {
 
@@ -17,16 +25,36 @@ void wifi(char buff[][MAX_STRING])
 {
 
 }
-void gnss(char buff[][MAX_STRING], FILE* fp)
+void gnss(char(*buff)[MAX_STRING], FILE* fp)
 {
-	fputs(buff[1], fp);
-	int i = 2;
-	while (strlen(buff[i] )>0)
+	if (flag3 == false)
 	{
-		fputs(",", fp);
-		fputs(buff[i],fp);
+		memcpy(Time_Ref, buff[1], 20);
+		flag3 = true;
+	}
 
+	int i = 1;
+	while (strlen(buff[i]) > 0)  //将buff进行缓存
+	{
+		memcpy(gnss_buff[count3][i-1], buff[i], MAX_STRING );
 		i++;
+	}
+	count3++;
+	if (count3 == 100)//缓存100次后，进行数据处理并写入
+	{
+		for (int j = 0; j < 100; j++)
+		{
+		
+			double temp = atof(gnss_buff[j][0]) - atof(Time_Ref);
+			_gcvt(temp,10, gnss_buff[j][0] );
+			for(i=0;strlen(gnss_buff[j][i]) > 0;i++)
+			{
+				fputs(gnss_buff[j][i], fp);
+				if(strlen(gnss_buff[j][i+1]) > 0)
+					fputs(",", fp);
+			}
+		}
+		count3 = 0;
 	}
 }
 
@@ -40,7 +68,7 @@ int main()
 	int i = 0;
 	for (i=0;i< NUM_DATA;i++)
 		memset(buff[i], '\0', MAX_STRING);
-
+	
 	fp1 = fopen("imu.txt", "w+");
 	fp2 = fopen("wifi.txt", "w+");
 	fp3 = fopen("gnss.txt", "w+");
