@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 #define MAX_STRING 1024					//每行最大字节数
-#define NUM_DATA 10						//每行最大数据值
+#define NUM_DATA 15						//每行最大数据值
 
 void imu(char buff[][MAX_STRING])
 {
@@ -17,9 +17,14 @@ void wifi(char buff[][MAX_STRING])
 {
 
 }
-void gnss(char buff[][MAX_STRING])
+void gnss(char buff[][MAX_STRING], FILE* fp)
 {
-	fputs()
+	int i = 0;
+	while (buff[i] != "\0")
+	{
+		fputs(buff[i],fp);
+		i++;
+	}
 }
 
 int main()
@@ -29,7 +34,13 @@ int main()
 	int count = 1;
 	char strLine[MAX_STRING];	//读取缓冲区
 	char buff[NUM_DATA][MAX_STRING]; //每一行数据分割缓存
-	fp3 = fopen("gnss.txt", "w");
+	int i = 0;
+	for (i=0;i< NUM_DATA;i++)
+		memset(buff[i], '\0', MAX_STRING);
+
+	fp1 = fopen("imu.txt", "w+");
+	fp2 = fopen("wifi.txt", "w+");
+	fp3 = fopen("gnss.txt", "w+");
 	if ((fp = fopen("EVALUATION(1).txt", "r")) == NULL)	// 判断文件是否存在及可读
 	{
 		printf("Open Falied!");
@@ -41,11 +52,10 @@ int main()
 		fgets(strLine, MAX_STRING, fp); // 将fp所指向的文件一行内容读到strLine缓冲区
 		if (strLine[0] != '%' && strLine[0] != '\n')
 		{
+			i = 0;
 			/* 将字符内容进行分割，并存至buff缓存区中*/
-			int i = 0;
 			char *token = strtok(strLine, ";");
 			while (token != NULL) {
-				memset(buff[i], '\0', MAX_STRING);
 				strcpy(buff[i++], token);
 				token = strtok(NULL, ";");
 			}
@@ -62,14 +72,13 @@ int main()
 			//调用gnss函数
 			else if (!strcmp(buff[0], "GNSS"))
 			{
-				gnss(buff);
+				gnss(buff, fp3);
 			}
 		}
-		int len = strlen(strLine);	 // 输出所读到的内容
-
-		count++;
 	}
 	fclose(fp);	 // 关闭读文件
-	printf("\n");
+	fclose(fp1);	 // 关闭读文件
+	fclose(fp2);	 // 关闭读文件
+	fclose(fp3);	 // 关闭读文件
 }
 
