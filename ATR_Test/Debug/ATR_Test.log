@@ -1,2 +1,4 @@
 ﻿  ATR_Test.cpp
+E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\ATR_Test.cpp(28,13): warning C4101: “fp1”: 未引用的局部变量
+E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\ATR_Test.cpp(28,18): warning C4101: “fp2”: 未引用的局部变量
   ATR_Test.vcxproj -> E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\Debug\ATR_Test.exe

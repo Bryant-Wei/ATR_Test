@@ -9,14 +9,27 @@
 #define MAX_STRING 1024					//每行最大字节数
 #define NUM_DATA 10						//每行最大数据值
 
+void imu(char buff[][MAX_STRING])
+{
+
+}
+void wifi(char buff[][MAX_STRING])
+{
+
+}
+void gnss(char buff[][MAX_STRING])
+{
+	fputs()
+}
 
 int main()
 {
 
-	FILE* fp;
+	FILE* fp, *fp1,*fp2,*fp3;
 	int count = 1;
 	char strLine[MAX_STRING];	//读取缓冲区
 	char buff[NUM_DATA][MAX_STRING]; //每一行数据分割缓存
+	fp3 = fopen("gnss.txt", "w");
 	if ((fp = fopen("EVALUATION(1).txt", "r")) == NULL)	// 判断文件是否存在及可读
 	{
 		printf("Open Falied!");
@@ -36,17 +49,20 @@ int main()
 				strcpy(buff[i++], token);
 				token = strtok(NULL, ";");
 			}
-			if (buff[0] == "ACCE")
+			//调用imu函数
+			if (!strcmp(buff[0],"ACCE")|| !strcmp(buff[0], "GYRO") || !strcmp(buff[0], "MAGN") || !strcmp(buff[0], "AHRS") || !strcmp(buff[0], "PRES") || !strcmp(buff[0], "LIGH"))
 			{
-
+				imu(buff);
 			}
-			if (buff[0] == "ACCE")
+			//调用wifi函数
+			else if (!strcmp(buff[0], "WIFI"))
 			{
-
+				wifi(buff);
 			}
-			if (buff[0] == "ACCE")
+			//调用gnss函数
+			else if (!strcmp(buff[0], "GNSS"))
 			{
-
+				gnss(buff);
 			}
 		}
 		int len = strlen(strLine);	 // 输出所读到的内容
@@ -56,3 +72,4 @@ int main()
 	fclose(fp);	 // 关闭读文件
 	printf("\n");
 }
+
