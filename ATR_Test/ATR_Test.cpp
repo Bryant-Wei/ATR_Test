@@ -20,7 +20,7 @@ char  imu_buff[BUFF_NUM][IMU_NUM][MAX_STRING];					//imu的缓存
 char  wifi_buff[BUFF_NUM][WIFI_NUM][MAX_STRING];				//wifi的缓存
 char  gnss_buff[BUFF_NUM][GNSS_NUM][MAX_STRING];				//gnss的缓存
 
-bool flag1, flag2, flag3= false;			//第一次读取的标志
+bool flag1=false, flag2=false, flag3= false;			//第一次读取的标志
 char Time_Ref[20];
 double Min_Time1= INT_MAX,Min_Time2= INT_MAX;
 void imu(char(*buff)[MAX_STRING], FILE* fp)
@@ -44,14 +44,27 @@ void imu(char(*buff)[MAX_STRING], FILE* fp)
 			//计算时间差TIME
 			double temp = (atof(imu_buff[j][2]) - Min_Time1) * 1000;
 			_gcvt(temp, 10, imu_buff[j][2]);
-			if (imu_buff[j][0] == "PRES")
-				index = i;
-			/*for (i = 0; strlen(imu_buff[j][i]) > 0; i++)
-			{
-				fputs(imu_buff[j][i], fp);
-				if (strlen(imu_buff[j][i + 1]) > 0)
-					fputs(",", fp);
-			}*/
+		//	//找出数据开头的第一个"PRES"作为参考起始点
+		//	if (imu_buff[j][0] == "PRES" && flag1 == false)
+		//	{
+		//		index = i;
+		//		break;
+		//	}
+		//	/*for (i = 0; strlen(imu_buff[j][i]) > 0; i++)
+		//	{
+		//		fputs(imu_buff[j][i], fp);
+		//		if (strlen(imu_buff[j][i + 1]) > 0)
+		//			fputs(",", fp);
+		//	}*/
+		//}
+		//if (flag1 == false)
+		//{
+		//	flag1 = true;
+		//	for (int j = index - 5; j < index + 5; j++)
+		//	{
+		//		if(abs(imu_buff[j][2]- imu_buff[index][2])<=5)
+		//		{ }
+		//	}
 		}
 		count1 = 0;
 	}
@@ -76,7 +89,7 @@ void wifi(char(*buff)[MAX_STRING], FILE* fp)
 	{
 		mac += pow(2,4*(11-i))* (save[i]-'0');
 	}
-	_ltoa(mac, save, 10);//将计算的整型数值转为字符，数值过大，转换不成功
+	_i64toa(mac, save, 10);//将计算的整型数值转为字符
 
 	//将buff进行缓存
 	memcpy(wifi_buff[count2][0], buff[2], MAX_STRING);
@@ -90,7 +103,7 @@ void wifi(char(*buff)[MAX_STRING], FILE* fp)
 		{
 			//计算时间差TIME
 			double temp =( atof(wifi_buff[j][0]) - Min_Time2)*1000;
-			_gcvt(temp, 10, wifi_buff[j][0]);
+			_itoa(temp, wifi_buff[j][0],10);
 			for ( int i = 0; i<=2; i++)
 			{
 				fputs(wifi_buff[j][i], fp);
@@ -146,8 +159,8 @@ int main()
 		memset(buff[i], '\0', MAX_STRING);
 	
 	fp1 = fopen("imu.txt", "w+");
-	//fp2 = fopen("wifi.txt", "w+");
-	//fp3 = fopen("gnss.txt", "w+");
+	fp2 = fopen("wifi.txt", "w+");
+	fp3 = fopen("gnss.txt", "w+");
 	if ((fp = fopen("EVALUATION(1).txt", "r")) == NULL)	// 判断文件是否存在及可读
 	{
 		printf("Open Falied!");
@@ -169,24 +182,24 @@ int main()
 			//调用imu函数
 			if (!strcmp(buff[0],"ACCE")|| !strcmp(buff[0], "GYRO") || !strcmp(buff[0], "MAGN") || !strcmp(buff[0], "AHRS") || !strcmp(buff[0], "PRES") || !strcmp(buff[0], "LIGH"))
 			{
-				imu(buff, fp1);
+				//imu(buff, fp1);
 			}
 			//调用wifi函数
 			else if (!strcmp(buff[0], "WIFI"))
 			{
-				//wifi(buff, fp2);
+				wifi(buff, fp2);
 			}
 			//调用gnss函数
 			else if (!strcmp(buff[0], "GNSS"))
 			{
-				//gnss(buff, fp3);
+				gnss(buff, fp3);
 			}
 		}
 	}
 	fclose(fp);	 // 关闭读文件
 	fclose(fp1);	 // 关闭读文件
-	//fclose(fp2);	 // 关闭读文件
-	//fclose(fp3);	 // 关闭读文件
+	fclose(fp2);	 // 关闭读文件
+	fclose(fp3);	 // 关闭读文件
 
 	return 0;
 }
