@@ -19,10 +19,13 @@ void wifi(char buff[][MAX_STRING])
 }
 void gnss(char buff[][MAX_STRING], FILE* fp)
 {
-	int i = 0;
-	while (buff[i] != "\0")
+	fputs(buff[1], fp);
+	int i = 2;
+	while (strlen(buff[i] )>0)
 	{
+		fputs(",", fp);
 		fputs(buff[i],fp);
+
 		i++;
 	}
 }
@@ -80,5 +83,7 @@ int main()
 	fclose(fp1);	 // 关闭读文件
 	fclose(fp2);	 // 关闭读文件
 	fclose(fp3);	 // 关闭读文件
+
+	return 0;
 }
 
