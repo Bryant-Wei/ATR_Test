@@ -1,5 +1,6 @@
 ﻿  ATR_Test.cpp
-E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\ATR_Test.cpp(36,16): warning C4018: “<”: 有符号/无符号不匹配
-E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\ATR_Test.cpp(42,20): warning C4018: “<”: 有符号/无符号不匹配
-E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\ATR_Test.cpp(44,15): warning C4293: “<<”: Shift 计数为负或过大，其行为未定义
+E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\ATR_Test.cpp(66,16): warning C4018: “<”: 有符号/无符号不匹配
+E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\ATR_Test.cpp(72,20): warning C4018: “<”: 有符号/无符号不匹配
+E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\ATR_Test.cpp(74,40): warning C4244: “+=”: 从“double”转换到“__int64”，可能丢失数据
+E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\ATR_Test.cpp(76,8): warning C4244: “参数”: 从“__int64”转换到“long”，可能丢失数据
   ATR_Test.vcxproj -> E:\研究生工作\研一学习\编程学习\ATR_Test\ATR_Test\Debug\ATR_Test.exe

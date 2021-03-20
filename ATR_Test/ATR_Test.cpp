@@ -5,23 +5,53 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "math.h"
 
 #define MAX_STRING 1024					//每行最大字节数
-#define NUM_DATA 15						//每行最大数据值
+#define NUM_DATA 15						//原始数据每行数据量
 #define BUFF_NUM 100					//最大缓存值
-#define WIFI_NUM 3						//WIFI需要的输出数据
+
+#define IMU_NUM 15						//WIFI每行需要输出的数据个数
+#define WIFI_NUM 3						//WIFI每行需要输出的数据个数
+#define GNSS_NUM 11						//GNSS每行需要输出的数据个数
 
 int count1, count2, count3=0;				//计算缓存长度
-char  imu_buff[BUFF_NUM][NUM_DATA][MAX_STRING];					//imu的缓存
+char  imu_buff[BUFF_NUM][IMU_NUM][MAX_STRING];					//imu的缓存
 char  wifi_buff[BUFF_NUM][WIFI_NUM][MAX_STRING];				//wifi的缓存
-char  gnss_buff[BUFF_NUM][NUM_DATA][MAX_STRING];				//gnss的缓存
+char  gnss_buff[BUFF_NUM][GNSS_NUM][MAX_STRING];				//gnss的缓存
 
 bool flag1, flag2, flag3= false;			//第一次读取的标志
 char Time_Ref[20];
 double Min_Time1= INT_MAX,Min_Time2= INT_MAX;
 void imu(char(*buff)[MAX_STRING], FILE* fp)
 {
-
+	if (Min_Time1 > atof(buff[2]))//找出最小SensorTimestamp
+	{
+		Min_Time1 = atof(buff[2]);
+	}
+	int i=0;
+	while (strlen(buff[i]) > 0)  //将buff进行缓存
+	{
+		memcpy(imu_buff[count1][i], buff[i], MAX_STRING);
+		i++;
+	}
+	count1++;
+	if (count1 == 100)//缓存100次后，进行数据处理并写入
+	{
+		for (int j = 0; j < 100; j++)
+		{
+			//计算时间差TIME
+			double temp = (atof(imu_buff[j][0]) - Min_Time1) * 1000;
+			_gcvt(temp, 10, imu_buff[j][0]);
+			/*for (i = 0; strlen(imu_buff[j][i]) > 0; i++)
+			{
+				fputs(imu_buff[j][i], fp);
+				if (strlen(imu_buff[j][i + 1]) > 0)
+					fputs(",", fp);
+			}*/
+		}
+		count1 = 0;
+	}
 }
 void wifi(char(*buff)[MAX_STRING], FILE* fp)
 {
@@ -30,7 +60,7 @@ void wifi(char(*buff)[MAX_STRING], FILE* fp)
 		Min_Time2 = atof(buff[2]);
 	}
 	//MAC地址换算
-	char save[13];
+	char save[MAX_STRING];
 	long long mac=0;
 	int j = 0;
 	for (int i=0;i<strlen(buff[4]);i++)
@@ -41,12 +71,13 @@ void wifi(char(*buff)[MAX_STRING], FILE* fp)
 	save[j++] = '\0';
 	for (int i = 0; i < strlen(save); i++)
 	{
-		mac = (1<<44);
+		mac += pow(2,4*(11-i))* (save[i]-'0');
 	}
+	_ltoa(mac, save, 10);//将计算的整型数值转为字符，数值过大，转换不成功
 
 	//将buff进行缓存
 	memcpy(wifi_buff[count2][0], buff[2], MAX_STRING);
-	memcpy(wifi_buff[count2][1], buff[4], MAX_STRING);
+	memcpy(wifi_buff[count2][1], save, MAX_STRING);
 	memcpy(wifi_buff[count2][2], buff[6], MAX_STRING);
 
 	count2++;
