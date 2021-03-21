@@ -17,54 +17,82 @@
 
 int count1, count2, count3=0;				//计算缓存长度
 char  imu_buff[BUFF_NUM][IMU_NUM][MAX_STRING];					//imu的缓存
+char  imu_output[IMU_NUM][MAX_STRING];							//imu的输出
 char  wifi_buff[BUFF_NUM][WIFI_NUM][MAX_STRING];				//wifi的缓存
 char  gnss_buff[BUFF_NUM][GNSS_NUM][MAX_STRING];				//gnss的缓存
 
-bool flag1=false, flag2=false, flag3= false;			//第一次读取的标志
+bool flag= false;			//第一次读取的标志
+bool acce = false, gyro = false, magn = false, ahrs = false, pres = false;
 char Time_Ref[20];
 double Min_Time1= INT_MAX,Min_Time2= INT_MAX;
-void imu(char(*buff)[MAX_STRING], FILE* fp)
+void imu(char(*buff)[MAX_STRING], FILE* fp)//采样率只有5Hz，没做线性插值
 {
-	int index;
 	if (Min_Time1 > atof(buff[2]))//找出最小SensorTimestamp
 	{
 		Min_Time1 = atof(buff[2]);
 	}
-	int i=0;
-	while (strlen(buff[i]) > 0)  //将buff进行缓存
+	for (int i = 0; strlen(buff[i]) > 0;i++)  //将buff进行缓存
 	{
 		memcpy(imu_buff[count1][i], buff[i], MAX_STRING);
-		i++;
 	}
 	count1++;
-	if (count1 == 100)//缓存100次后，进行数据处理并写入
+	if (count1 == 100)//缓存100次后，对数据进行处理，线性插值等运算，并将数据写入
 	{
 		for (int j = 0; j < 100; j++)
 		{
 			//计算时间差TIME
-			double temp = (atof(imu_buff[j][2]) - Min_Time1) * 1000;
-			_gcvt(temp, 10, imu_buff[j][2]);
-		//	//找出数据开头的第一个"PRES"作为参考起始点
-		//	if (imu_buff[j][0] == "PRES" && flag1 == false)
-		//	{
-		//		index = i;
-		//		break;
-		//	}
-		//	/*for (i = 0; strlen(imu_buff[j][i]) > 0; i++)
-		//	{
-		//		fputs(imu_buff[j][i], fp);
-		//		if (strlen(imu_buff[j][i + 1]) > 0)
-		//			fputs(",", fp);
-		//	}*/
-		//}
-		//if (flag1 == false)
-		//{
-		//	flag1 = true;
-		//	for (int j = index - 5; j < index + 5; j++)
-		//	{
-		//		if(abs(imu_buff[j][2]- imu_buff[index][2])<=5)
-		//		{ }
-		//	}
+			int temp = (atof(imu_buff[j][2]) - Min_Time1) * 1000;
+			_itoa(temp,  imu_buff[j][2],10);
+			//分别检测"ACCE"、"GYRO"、"MAGN"、"AHRS"、 "PRES"
+			if (strcmp(imu_buff[j][0], "PRES") == 0 && pres == false)
+			{
+				memcpy(imu_output[13], imu_buff[j][3], MAX_STRING);
+				memcpy(imu_output[0], imu_buff[j][2], MAX_STRING);
+
+				pres = true;
+	}
+			else if (strcmp(imu_buff[j][0], "ACCE")==0 &&acce == false && pres == true)
+			{
+				memcpy(imu_output[1],imu_buff[j][3] , MAX_STRING);
+				memcpy(imu_output[2],imu_buff[j][4], MAX_STRING);
+				memcpy(imu_output[3],imu_buff[j][5], MAX_STRING);
+				acce = true;
+			}
+			else if (strcmp(imu_buff[j][0], "GYRO") == 0 && gyro == false && pres == true)
+			{
+				memcpy(imu_output[4], imu_buff[j][3], MAX_STRING);
+				memcpy(imu_output[5], imu_buff[j][4], MAX_STRING);
+				memcpy(imu_output[6], imu_buff[j][5], MAX_STRING);
+				gyro = true;
+			}
+			else if (strcmp(imu_buff[j][0], "MAGN") == 0 && magn == false && pres == true)
+			{
+				memcpy(imu_output[7], imu_buff[j][3], MAX_STRING);
+				memcpy(imu_output[8], imu_buff[j][4], MAX_STRING);
+				memcpy(imu_output[9], imu_buff[j][5], MAX_STRING);
+				magn = true;
+			}
+			else if (strcmp(imu_buff[j][0], "AHRS") == 0 && ahrs == false && pres == true)
+			{
+				memcpy(imu_output[10], imu_buff[j][3], MAX_STRING);
+				memcpy(imu_output[11], imu_buff[j][4], MAX_STRING);
+				memcpy(imu_output[12], imu_buff[j][5], MAX_STRING);
+				ahrs = true;
+			}
+			
+
+			if (acce && gyro && magn && ahrs && pres)//获取到所有参数的数据后进行一次写入
+			{
+				acce = false; gyro = false; magn = false; ahrs = false; pres = false;
+				for (int i = 0; strlen(imu_output[i])>0; i++)
+				{
+					fputs(imu_output[i], fp);
+					if (strlen(imu_output[i + 1]) > 0)
+						fputs(",", fp);
+				}
+				fputs("\n", fp);
+			}
+		
 		}
 		count1 = 0;
 	}
@@ -87,7 +115,7 @@ void wifi(char(*buff)[MAX_STRING], FILE* fp)
 	save[j++] = '\0';
 	for (int i = 0; i < strlen(save); i++)
 	{
-		mac += pow(2,4*(11-i))* (save[i]-'0');
+		mac = mac + pow(2,4*(11-i))* (save[i]-'0');
 	}
 	_i64toa(mac, save, 10);//将计算的整型数值转为字符
 
@@ -102,7 +130,7 @@ void wifi(char(*buff)[MAX_STRING], FILE* fp)
 		for (j = 0; j < 100; j++)
 		{
 			//计算时间差TIME
-			double temp =( atof(wifi_buff[j][0]) - Min_Time2)*1000;
+			int temp =( atof(wifi_buff[j][0]) - Min_Time2)*1000;
 			_itoa(temp, wifi_buff[j][0],10);
 			for ( int i = 0; i<=2; i++)
 			{
@@ -110,17 +138,16 @@ void wifi(char(*buff)[MAX_STRING], FILE* fp)
 				if (i<2)
 					fputs(",", fp);
 			}
-
 		}
 		count2 = 0;
 	}
 }
 void gnss(char(*buff)[MAX_STRING], FILE* fp)
 {
-	if (flag3 == false)   //保存第一个数据的AppTimestamp
+	if (flag == false)   //保存第一个数据的AppTimestamp
 	{
 		memcpy(Time_Ref, buff[1], 20);
-		flag3 = true;
+		flag = true;
 	}
 	int i = 1;
 	while (strlen(buff[i]) > 0)  //将buff进行缓存
@@ -182,7 +209,7 @@ int main()
 			//调用imu函数
 			if (!strcmp(buff[0],"ACCE")|| !strcmp(buff[0], "GYRO") || !strcmp(buff[0], "MAGN") || !strcmp(buff[0], "AHRS") || !strcmp(buff[0], "PRES") || !strcmp(buff[0], "LIGH"))
 			{
-				//imu(buff, fp1);
+				imu(buff, fp1);
 			}
 			//调用wifi函数
 			else if (!strcmp(buff[0], "WIFI"))
